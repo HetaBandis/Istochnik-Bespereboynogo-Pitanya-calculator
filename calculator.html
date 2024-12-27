@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Расчёт времени работы ИБП и максимальной нагрузки</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            text-align: center;
+            color: green;
+        }
+        .error {
+            margin-top: 20px;
+            font-size: 1.2em;
+            text-align: center;
+            color: red;
+        }
+        .info {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+        @media screen and (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Расчёт времени работы ИБП и максимальной нагрузки</h1>
+        
+        <label for="voltage">Напряжение аккумулятора (В):</label>
+        <input type="number" id="voltage" placeholder="Введите напряжение" required>
+        
+        <label for="capacity">Ёмкость аккумулятора (А·ч):</label>
+        <input type="number" id="capacity" placeholder="Введите ёмкость" required>
+        
+        <label for="load">Потребляемая мощность нагрузки (Вт):</label>
+        <input type="number" id="load" placeholder="Введите мощность нагрузки" required>
+        
+        <label for="efficiency">Коэффициент полезного действия (КПД, по умолчанию 0.85):</label>
+        <input type="text" id="efficiency" placeholder="Введите КПД" value="0.85">
+        
+        <label for="va">Мощность ИБП в VA:</label>
+        <input type="number" id="va" placeholder="Введите мощность ИБП (VA)" required>
+        
+        <!-- Кнопки для расчёта -->
+        <button onclick="calculateRuntime()">Рассчитать время работы ИБП</button>
+        <button onclick="calculateMaxLoad()">Рассчитать максимальную нагрузку ИБП</button>
+
+        <div class="result" id="result"></div>
+        <div class="error" id="error"></div>
+        <div class="info">Для расчёта используется стандартный КПД 85%, который можно изменить.</div>
+    </div>
+
+    <script>
+        function calculateRuntime() {
+            // Получение значений из формы
+            let voltage = parseFloat(document.getElementById('voltage').value);
+            let capacity = parseFloat(document.getElementById('capacity').value);
+            let load = parseFloat(document.getElementById('load').value);
+            let efficiency = parseFloat(document.getElementById('efficiency').value) || 0.85; // Если не введён КПД, используем стандартное значение
+
+            // Очистка старых ошибок и результатов
+            document.getElementById('error').innerText = '';
+            document.getElementById('result').innerText = '';
+
+            // Проверка на ввод всех данных
+            if (isNaN(voltage) || isNaN(capacity) || isNaN(load) || voltage <= 0 || capacity <= 0 || load <= 0) {
+                document.getElementById('error').innerText = 'Пожалуйста, введите корректные значения для всех полей.';
+                return;
+            }
+            if (isNaN(efficiency) || efficiency <= 0 || efficiency > 1) {
+                document.getElementById('error').innerText = 'Пожалуйста, введите корректное значение КПД (от 0 до 1).';
+                return;
+            }
+
+            // Расчёт доступной энергии аккумулятора в ватт-часах
+            let energyWh = voltage * capacity * efficiency;
+
+            // Расчёт времени работы в часах
+            let runtimeHours = energyWh / load;
+
+            // Перевод времени работы в минуты
+            let runtimeMinutes = runtimeHours * 60;
+
+            // Вывод результата
+            document.getElementById('result').innerText = `Время работы ИБП: ${runtimeMinutes.toFixed(2)} минут`;
+        }
+
+        function calculateMaxLoad() {
+            // Получение значения VA
+            let va = parseFloat(document.getElementById('va').value); // Мощность ИБП в VA
+
+            // Очистка старых ошибок и результатов
+            document.getElementById('error').innerText = '';
+            document.getElementById('result').innerText = '';
+
+            // Проверка на ввод мощности ИБП в VA
+            if (isNaN(va) || va <= 0) {
+                document.getElementById('error').innerText = 'Пожалуйста, введите корректное значение мощности ИБП в VA.';
+                return;
+            }
+
+            // Расчёт максимальной нагрузки ИБП в ваттах (W)
+            let maxLoadW = va * 0.8;
+
+            // Вывод результата
+            document.getElementById('result').innerText = `Максимальная нагрузка ИБП: ${maxLoadW.toFixed(2)} Вт`;
+        }
+    </script>
+</body>
+</html>
